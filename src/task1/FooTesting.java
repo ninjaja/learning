@@ -85,8 +85,10 @@ public class FooTesting {
                 }});
             }});
         }};
+
+        final Foo appendMe = new Foo();
         fooTesting.append(bar);
-        fooTesting.appendByRecursion(bar);
+        fooTesting.findLastByRecursion(bar).setLink(appendMe);
     }
 
     public void append(final Foo bar) {
@@ -94,9 +96,11 @@ public class FooTesting {
         getLastElementOf(bar).setLink(appendMe);
     }
 
-    public void appendByRecursion(final Foo bar) {
-        final Foo appendMe = new Foo();
-        getLastByRecursion(bar).setLink(appendMe);
+    public Foo findLastByRecursion(final Foo bar) {
+        if (Objects.nonNull(bar.getLink())) {
+            return findLastByRecursion(bar.getLink());
+        }
+        return bar;
     }
 
     private Foo getLastElementOf(final Foo initialElement) {
@@ -105,12 +109,5 @@ public class FooTesting {
             currentElement = currentElement.getLink();
         }
         return currentElement;
-    }
-
-    private Foo getLastByRecursion(final Foo initialElement) {
-        if (Objects.nonNull(initialElement.getLink())) {
-            return getLastByRecursion(initialElement.getLink());
-        }
-        return initialElement;
     }
 }
