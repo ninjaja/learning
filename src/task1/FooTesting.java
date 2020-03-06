@@ -1,5 +1,7 @@
 package task1;
 
+import java.util.Objects;
+
 public class FooTesting {
 
     public static void main(String[] args) {
@@ -87,26 +89,19 @@ public class FooTesting {
     }
 
     public void append(final Foo bar) {
-        if (bar != null) {
-            final Foo appendMe = new Foo();
-            getLastElementOf(bar).setLink(appendMe);
-        } else {
-            System.out.println("LOGGER: called append method on null");
-        }
+        final Foo appendMe = new Foo();
+        getLastElementOf(bar).setLink(appendMe);
     }
 
-    private Foo getLastElementOf(Foo initialElement) {
-        int count = 0;
+    private Foo getLastElementOf(final Foo initialElement) {
         Foo iteratedElement = initialElement;
         while (hasNextElement(iteratedElement)) {
             iteratedElement = iteratedElement.getLink();
-            count++;
         }
-        System.out.println("Number of nodes iterated: " + count);
         return iteratedElement;
     }
 
     private boolean hasNextElement(final Foo bar) {
-        return bar.getLink() != null;
+        return Objects.nonNull(bar.getLink());
     }
 }
