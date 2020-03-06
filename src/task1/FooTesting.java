@@ -94,14 +94,10 @@ public class FooTesting {
     }
 
     private Foo getLastElementOf(final Foo initialElement) {
-        Foo iteratedElement = initialElement;
-        while (hasNextElement(iteratedElement)) {
-            iteratedElement = iteratedElement.getLink();
+        Foo currentElement = initialElement;
+        while (Objects.nonNull(currentElement.getLink())) {
+            currentElement = currentElement.getLink();
         }
-        return iteratedElement;
-    }
-
-    private boolean hasNextElement(final Foo bar) {
-        return Objects.nonNull(bar.getLink());
+        return currentElement;
     }
 }
