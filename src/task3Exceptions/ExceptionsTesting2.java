@@ -1,7 +1,7 @@
 package task3Exceptions;
 
 public class ExceptionsTesting2 {
-/*RuntimeException отловится, но его потомок Exception - нет*/
+/*RuntimeException отловится, но его предок Exception - нет*/
 
     public static void main(String[] args) {
         int[] array = new int[3];

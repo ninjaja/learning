@@ -1,23 +1,37 @@
 package task3Exceptions;
 
 public class ExceptionsTesting {
-/*срабатывание дочерних классов исключений, но 9я строка не выполнится и RuntimeException не отловится*/
 
+    static int k = 0;
     public static void main(String[] args) {
         int[] array = new int[3];
         try {
             int j = array[3];
-            throw new RuntimeException();
-
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("inside IndexOutOfBoundsException catch block");
-        } catch (RuntimeException ex) {
-            System.out.println("inside RTE catch block");
-        } catch (Exception ex1) {
-            System.out.println("inside Exception catch block");
-        } finally {
-            System.out.println("inside finally block");
+            throw new RuntimeException(); // doesn't get here
+        } catch (Exception e) {
+            System.out.println(processException(e));
         }
-        System.out.println("inside program block");
+        System.out.println(testFinally()); // finally block worked AFTER return statement
+    }
+
+    private static int processException(Exception ex) {
+        try {
+            throw ex;
+        } catch (IndexOutOfBoundsException e) {
+            k = 2;
+            return k;
+        } catch (RuntimeException e) {
+            k = 3;
+            return k;
+        } catch (Exception e) {
+            k = 5;
+            return k;
+        } finally {
+            k = 10;
+        }
+    }
+
+    private static int testFinally() {
+        return k;
     }
 }
