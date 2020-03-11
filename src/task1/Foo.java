@@ -1,5 +1,9 @@
 package task1;
 
+/**
+ * Bean holding a recursively declared variable of its own type
+ */
+
 public class Foo {
     Object data;
     Foo link;

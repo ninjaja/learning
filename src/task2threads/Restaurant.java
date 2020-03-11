@@ -1,5 +1,8 @@
 package task2threads;
 
+/**
+ * Demo of interaction between a {@code Waiter} and {@code Chef} threads
+ */
 public class Restaurant {
 
     public static void main(String[] args) {

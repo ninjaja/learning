@@ -2,6 +2,10 @@ package task1;
 
 import java.util.Objects;
 
+/**
+ * Demo of two ways of assigning value to the last (or the deepest) entry of a recursive variable:
+ * in {@code while} cycle and recursion
+ */
 public class FooTesting {
 
     public static void main(String[] args) {
@@ -91,12 +95,16 @@ public class FooTesting {
         fooTesting.findLastByRecursion(bar).setLink(appendMe);
     }
 
+    /**
+     * Method to assign value to recursive variable
+     * @param bar recursive variable
+     */
     public void append(final Foo bar) {
         final Foo appendMe = new Foo();
         getLastElementOf(bar).setLink(appendMe);
     }
 
-    public Foo findLastByRecursion(final Foo bar) {
+    private Foo findLastByRecursion(final Foo bar) {
         if (Objects.nonNull(bar.getLink())) {
             return findLastByRecursion(bar.getLink());
         }

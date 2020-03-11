@@ -1,5 +1,8 @@
 package task4Autoboxing;
 
+/**
+ * Demo of integers boxing/unboxing and of integer pool
+ */
 public class AutoBoxing {
 
     public static void main(String[] args) {
@@ -13,25 +16,25 @@ public class AutoBoxing {
         Integer e1 = 127;
 
         //reference comparison:
-        System.out.println("a == a1 " + (a == a1));
+        assert a != a1;
 
         //boxing c on initialization, then reference comparison
-        System.out.println("a == c " + (a == c));
+        assert a != c;
 
         //unboxing a, then compare base types:
-        System.out.println("a == b " + (a == b));
+        assert a != b;
 
         //unboxing b, then compare base types:
-        System.out.println("b == c " + (b == c));
+        assert b != c;
 
         //pool of Integers capacity demo (-128..127)
-        System.out.println("b == b1 " + (b == b1)); //true
+        assert b == b1;
         b = b + c;
         b1 = b1 + c;
-        System.out.println("b == b1 " + (b == b1)); //true, pool is not for base types
-        System.out.println("e == e1 " + (e == e1));
+        assert b == b1;
+        assert e == e1; //pool is not for base types
         e = e + c;
         e1 = e1 + c;
-        System.out.println("e == e1 " + (e == e1)); //false, out of pool range
+        assert e != e1; //out of pool range
     }
 }

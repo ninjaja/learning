@@ -1,5 +1,8 @@
 package task2threads;
 
+/**
+ * Imitation of a chef in a restaurant who cooks dishes for random period of time
+ */
 public class Chef implements Runnable {
 
     private static final int MAX_COOKING_DURATION_IN_MILLIS = 10000;

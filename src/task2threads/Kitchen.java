@@ -1,5 +1,11 @@
 package task2threads;
 
+/**
+ * Model to imitate two events:
+ *  1. when a {@code Waiter} gives an order to cook by {@code Chef}
+ *  2. when an order is cooked
+ *
+ */
 public class Kitchen {
 
     private static final int MIN_ORDERS_TO_START_COOKING = 1;

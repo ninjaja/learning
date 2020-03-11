@@ -1,17 +1,24 @@
 package task3Exceptions;
 
+/**
+ * Class to demonstrate 2 cases:
+ *  1. How exceptions are handled by child-classes rather than parents
+ *  2. How finally-block can change variable value even after returning the result
+ */
+
 public class ExceptionsTesting {
 
-    static int k = 0;
+    private static int k = 0;
+
     public static void main(String[] args) {
         int[] array = new int[3];
         try {
             int j = array[3];
             throw new RuntimeException(); // doesn't get here
         } catch (Exception e) {
-            System.out.println(processException(e));
+            assert processException(e) == 2;
         }
-        System.out.println(testFinally()); // finally block worked AFTER return statement
+        assert testFinally() == 10;
     }
 
     private static int processException(Exception ex) {

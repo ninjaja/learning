@@ -1,5 +1,8 @@
 package task2threads;
 
+/**
+ * Imitation of a waiter in a restaurant who receives orders with random intervals.
+ */
 public class Waiter implements Runnable {
 
     private Kitchen kitchen;
