@@ -1,3 +1,5 @@
+package task5TreeSetAndHashSet;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -7,7 +9,7 @@ import java.util.*;
  * equal in value but have a different scale (like 2.0 and 2.00).
  * HashSet uses HashMap inside, which uses equals() method, which returns false in this case
  */
-public class task5TreeSetAndHashSet {
+public class TreeSetAndHashSet {
 
     public static void main(String[] args) {
         Set<BigDecimal> treeSet = new TreeSet<>();
