@@ -2,7 +2,10 @@ package task8databases;
 
 import java.sql.*;
 
-public class StatementTesting {
+/**
+ * Demo of creating database via JDBC, {@code Statement}, {@code PreparedStatement}, {@code CallableStatement}.
+ */
+public class DBFromJdbc {
 
     private static final String URL =
             "jdbc:mysql://127.0.0.1:3306/mysql?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
@@ -27,13 +30,13 @@ public class StatementTesting {
 
     public static void main(String[] args) {
         try (Connection connection = getConnection()) {
-//            dropAndCreateDataBase(connection);
+            dropAndCreateDataBase(connection);
             createStudentsTable(connection);
             createStudentsAuditTable(connection);
             addStudent(connection, "Ivanov", "Peter");
             addStudent(connection, "Petrov", "Fedor");
             addStudent(connection, "Sidorov", "Ivan");
-//            getStudentDataById(connection, 1);
+            getStudentDataById(connection, 1);
             addStudentWithStoredProcedure(connection,"Babich", "Stepan");
 
         } catch (SQLException e) {
