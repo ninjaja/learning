@@ -1,4 +1,4 @@
-package task5TreeSetAndHashSet;
+package task5Collections;
 
 import java.math.BigDecimal;
 import java.util.*;
