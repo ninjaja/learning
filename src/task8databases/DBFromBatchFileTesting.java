@@ -10,6 +10,6 @@ import java.io.IOException;
 public class DBFromBatchFileTesting {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Runtime.getRuntime().exec("cmd /c database.bat", null, new File("E:\\Programming\\techart\\learning\\resources"));
+        Runtime.getRuntime().exec("cmd /c database.bat", null, new File("resources"));
     }
 }
