@@ -7,6 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * Simple custom annotation that takes an integer as a {@code value}
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

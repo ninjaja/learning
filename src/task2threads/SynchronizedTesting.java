@@ -1,7 +1,10 @@
 package task2threads;
 
 /**
- * Simple demo of how {@code }
+ * Simple demo of how {@code synchronized} keyword can be used
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class SynchronizedTesting {
 

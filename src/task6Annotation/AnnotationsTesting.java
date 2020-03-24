@@ -2,6 +2,9 @@ package task6Annotation;
 
 /**
  * Demo of applying and accessing a custom annotation
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class AnnotationsTesting {
 

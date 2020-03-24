@@ -7,6 +7,9 @@ import java.util.List;
 
 /**
  * Demo of {@code List} implementations performance
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class ArrayListVsLinkedList {
 

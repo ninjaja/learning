@@ -2,6 +2,9 @@ package task2threads;
 
 /**
  * Imitation of a chef in a restaurant who cooks dishes for random period of time
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class Chef implements Runnable {
 

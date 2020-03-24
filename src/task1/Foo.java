@@ -2,6 +2,9 @@ package task1;
 
 /**
  * Bean holding a recursively declared variable of its own type
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 
 public class Foo {

@@ -4,6 +4,9 @@ package task3Exceptions;
  * Class to demonstrate 2 cases:
  *  1. How exceptions are handled by child-classes rather than parents
  *  2. How finally-block can change variable value even after returning the result
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 
 public class ExceptionsTesting {

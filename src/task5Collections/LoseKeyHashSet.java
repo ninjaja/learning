@@ -5,6 +5,9 @@ import java.util.Set;
 
 /**
  * Demo of how an element can be lost in HashSet when it is mutable.
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class LoseKeyHashSet {
 

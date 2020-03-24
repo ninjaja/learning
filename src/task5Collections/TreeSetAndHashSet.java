@@ -1,13 +1,21 @@
 package task5Collections;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Demo of how {@code TreeSet} and {@code HashSet} compare objects before storing them, in particular {@code BigDecimal}.
  * TreeSet uses TreeMap inside, which uses compareTo() method, which returns 0 for BigDecimals for objects that are
  * equal in value but have a different scale (like 2.0 and 2.00).
  * HashSet uses HashMap inside, which uses equals() method, which returns false in this case
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class TreeSetAndHashSet {
 

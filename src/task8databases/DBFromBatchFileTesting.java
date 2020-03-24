@@ -5,6 +5,9 @@ import java.io.IOException;
 
 /**
  * Demo of creating database from batch file
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 
 public class DBFromBatchFileTesting {

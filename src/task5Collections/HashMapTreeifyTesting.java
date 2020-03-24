@@ -7,6 +7,9 @@ import java.util.HashMap;
  * number of objects in one bin should be not less than TREEIFY_THRESHOLD parameter (8) and number of populated bins
  * should be not less than MIN_TREEIFY_CAPACITY, otherwise simple resize of HashMap triggers. In this example treeifying
  * starts working on the iteration when j = 8 and i = 0.
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class HashMapTreeifyTesting {
 

@@ -2,6 +2,9 @@ package task2threads;
 
 /**
  * Demo of interaction between a {@code Waiter} and {@code Chef} threads
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class Restaurant {
 

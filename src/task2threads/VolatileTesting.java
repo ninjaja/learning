@@ -5,6 +5,9 @@ package task2threads;
  * change of {@code count} value and console output is a sequence of both threads' output. While without {@code volatile}
  * console output will contain mostly (in some cases only) {@code ChangeMaker} output because JVM does not guess that
  * value is needed to be updated from main memory to cache.
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class VolatileTesting {
 

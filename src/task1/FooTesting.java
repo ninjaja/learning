@@ -5,6 +5,9 @@ import java.util.Objects;
 /**
  * Demo of two ways of assigning value to the last (or the deepest) entry of a recursive variable:
  * in {@code while} cycle and recursion
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class FooTesting {
 

@@ -6,6 +6,9 @@ import java.io.IOException;
 
 /**
  * Demo of try-with-resources statement.
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class TryWithResourcesTest {
 

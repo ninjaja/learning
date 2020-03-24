@@ -7,6 +7,9 @@ import java.util.TreeSet;
 
 /**
  * Demo of  {@code TreeSet} with default sorting and custom {@code Comparator}
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class TreeSetTesting {
 

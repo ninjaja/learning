@@ -2,6 +2,13 @@ package task5Collections;
 
 import java.util.HashMap;
 
+/**
+ * Demo of how hashcode() and equals() are used in HashMap and how mutable keys can be lost inside HashMap
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
+ */
+
 public class HashMapEqualsAndHashcode {
 
     public static void main(String[] args) {

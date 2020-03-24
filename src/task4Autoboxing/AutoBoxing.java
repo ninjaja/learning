@@ -2,6 +2,9 @@ package task4Autoboxing;
 
 /**
  * Demo of integers boxing/unboxing and of integer pool
+ *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class AutoBoxing {
 

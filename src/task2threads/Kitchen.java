@@ -5,6 +5,8 @@ package task2threads;
  *  1. when a {@code Waiter} gives an order to cook by {@code Chef}
  *  2. when an order is cooked
  *
+ * @author Dmitry Matrizaev
+ * @since 1.0
  */
 public class Kitchen {
 
