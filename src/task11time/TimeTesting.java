@@ -24,8 +24,8 @@ public class TimeTesting {
         ZonedDateTime zonedAfterDST = zonedBeforeDST.plusMinutes(10); // adding 10 minutes
         assert (zonedAfterDST.toString().equals("2020-03-29T03:05+02:00[Europe/Paris]")); // DST has changed
 
-        long deltaInMinutes = ChronoUnit.MINUTES.between(zonedBeforeDST, zonedAfterDST); // delta is still 10 minutes
-        assert (deltaInMinutes == 10);
+        long deltaInMinutes = ChronoUnit.MINUTES.between(zonedBeforeDST, zonedAfterDST);
+        assert (deltaInMinutes == 10); // delta is still 10 minutes
     }
 
 }
