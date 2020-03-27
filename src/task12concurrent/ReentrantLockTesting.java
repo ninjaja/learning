@@ -41,7 +41,6 @@ public class ReentrantLockTesting {
         System.out.println("Program execution ended");
 
         /* Console output example with TIME_WAIT = 7000 and TIME_SLEEP = 5000 :
-
             17:28:36 Initial resource
             17:28:36 Second thread changed resource
             17:28:41 second finished work
@@ -50,7 +49,6 @@ public class ReentrantLockTesting {
             Program execution ended
 
           Console output example with TIME_WAIT = 5000 and TIME_SLEEP = 7000 :
-
             17:33:46 Initial resource
             17:33:46 Second thread changed resource
             17:33:53 second finished work
