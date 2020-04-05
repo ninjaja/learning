@@ -6,6 +6,8 @@ import custom.orm.annotations.ManyToOne;
 import custom.orm.annotations.PrimaryKey;
 
 /**
+ * Entity representing data of a sales transaction backed with the self-titled table in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
@@ -78,5 +80,10 @@ public class Purchase {
     @Override
     public int hashCode() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "Purchase{" + "id=" + id + ", purchaser=" + purchaser + ", item=" + item + ", amount=" + amount + '}';
     }
 }

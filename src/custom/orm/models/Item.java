@@ -3,9 +3,10 @@ package custom.orm.models;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.PrimaryKey;
-import custom.orm.annotations.Table;
 
 /**
+ * Entity representing a selling item backed with the self-titled table in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
@@ -88,5 +89,10 @@ public class Item {
     @Override
     public int hashCode() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "Item{" + "id=" + id + ", seller=" + seller + ", title='" + title + '\'' + ", description='" + description + '\'' + ", price=" + price + '}';
     }
 }

@@ -16,11 +16,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * Mapper class which builds a List of objects from ResultSet
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
 public class ResultSetToObjectMapper<T> {
-
+    /**
+     * @param rs   ResultSet to build an Object from
+     * @param type Class of the resulting Object
+     * @return resulting List of objects
+     */
     public List<T> getObject(ResultSet rs, Class type) {
         List<T> results = new ArrayList<>();
         if (type.isAnnotationPresent(Entity.class)) {
@@ -46,7 +52,6 @@ public class ResultSetToObjectMapper<T> {
                     }
                     results.add(bean);
                 }
-
             } catch (SQLException | InstantiationException | IllegalAccessException | IntrospectionException | InvocationTargetException e) {
                 e.printStackTrace();
             }

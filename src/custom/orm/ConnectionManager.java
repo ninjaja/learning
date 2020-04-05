@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 /**
+ * Database connectivity layer configured by properties bundle.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

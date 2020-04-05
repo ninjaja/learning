@@ -5,6 +5,8 @@ import custom.orm.annotations.Entity;
 import custom.orm.annotations.PrimaryKey;
 
 /**
+ * Entity representing a user which can buy and sell items backed with the self-titled table in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

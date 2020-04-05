@@ -11,11 +11,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 /**
+ * Service layer for dealing with entities fields and their values.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
@@ -54,6 +55,22 @@ public class TableInfoService {
         return columnsNames.toString().replace("[", "").replace("]", "");
     }
 
+    List<String> getColumnsNamesWithoutId() {
+        List<String> columnsNames = new ArrayList<>();
+        Field[] fields = getFields();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                continue;
+            }
+            if (Objects.nonNull(field.getAnnotation(Column.class))) {
+                columnsNames.add(field.getAnnotation(Column.class).name());
+            } else {
+                columnsNames.add(field.getName());
+            }
+        }
+        return columnsNames;
+    }
+
     List<String> getColumnsNames() {
         List<String> columnsNames = new ArrayList<>();
         Field[] fields = getFields();
@@ -87,10 +104,36 @@ public class TableInfoService {
                     e.printStackTrace();
                 }
             } else {
-                // TODO: 04.04.2020 logger -> no getter found for field: fieldName
+                throw new CustomOrmException("No getter() found for field: " + field.getName());
             }
         }
         return values.toString().replace("[", "").replace("]", "");
+    }
+
+    List<String> getValuesWithoutId() {
+        List<String> values = new ArrayList<>();
+        Field[] fields = getFields();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                continue;
+            }
+            Method getter = null;
+            try {
+                getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
+            } catch (IntrospectionException e) {
+                e.printStackTrace();
+            }
+            if (Objects.nonNull(getter)) {
+                try {
+                    values.add("'" + getter.invoke(entity).toString() + "'");
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                throw new CustomOrmException("No getter() found for field: " + field.getName());
+            }
+        }
+        return values;
     }
 
     List<String> getValues() {
@@ -110,7 +153,7 @@ public class TableInfoService {
                     e.printStackTrace();
                 }
             } else {
-                // TODO: 04.04.2020 logger -> no getter found for field: fieldName
+                throw new CustomOrmException("No getter() found for field: " + field.getName());
             }
         }
         return values;

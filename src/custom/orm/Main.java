@@ -13,7 +13,17 @@ public class Main {
         OrmManager manager = new OrmManager();
 
         User user1 = new User("First User", "first_user", "1_user_pa$$word");
+        User user2 = new User("Second User", "second_user", "2_user_pa$$word");
+        User user3 = new User("Third User", "third_user", "3_user_pa$$word");
         manager.create(user1);
+        manager.create(user2);
+        manager.create(user3);
         System.out.println(manager.getById(User.class, 1));
+        user1.setFullName("Not First User");
+        manager.update(user1, 1);
+        System.out.println(manager.getById(User.class, 1));
+        manager.delete(user2, 2);
+        System.out.println(manager.getAll(User.class));
+
     }
 }

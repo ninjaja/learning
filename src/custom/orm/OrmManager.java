@@ -4,9 +4,14 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+
 /**
+ * Class contains CRUD operations to operate with objects and their persistence in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
@@ -39,8 +44,8 @@ public class OrmManager {
         TableInfoService tableInfo = new TableInfoService(object);
         ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
-        String idRowName = tableInfo.getIdFieldName();
-        String sql = "SELECT * FROM " + tableName + " WHERE " + idRowName + " = " + id + ";";
+        String idColumnName = tableInfo.getIdFieldName();
+        String sql = "SELECT * FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
         List<T> results;
         T result = null;
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
@@ -58,6 +63,67 @@ public class OrmManager {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public <T> List<T> getAll(Class<T> type) {
+        Object object = null;
+        try {
+            object = type.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        TableInfoService tableInfo = new TableInfoService(object);
+        ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
+        String tableName = SCHEMA + "." + tableInfo.defineTableName();
+        String sql = "SELECT * FROM " + tableName + ";";
+        List<T> results = new ArrayList<>();
+        try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
+            ResultSet resultSet = st.executeQuery(sql);
+            results = mapper.getObject(resultSet, type);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return results;
+    }
+
+    public void update(Object object, int id) {
+        TableInfoService tableInfo = new TableInfoService(object);
+        String tableName = SCHEMA + "." + tableInfo.defineTableName();
+        String idColumnName = tableInfo.getIdFieldName();
+        List<String> columnsNames = tableInfo.getColumnsNamesWithoutId();
+        List<String> fieldsValues = tableInfo.getValuesWithoutId();
+        StringBuilder assignments = new StringBuilder();
+        if (isNotEmpty(columnsNames) && isNotEmpty(fieldsValues) && columnsNames.size() == fieldsValues.size()) {
+            for (int i = 0; i < columnsNames.size(); i++) {
+                assignments.append(columnsNames.get(i)).append(" = ").append(fieldsValues.get(i));
+                if (i < columnsNames.size() - 1) {
+                    assignments.append(",");
+                }
+            }
+        } else {
+            throw new CustomOrmException("Fields' names and values number mismatch in: " + object.getClass().getName());
+        }
+        String sql = "UPDATE " + tableName + " SET " + assignments + " WHERE " + idColumnName + " = " + id;
+        try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
+            st.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void delete(Object object, int id) {
+        TableInfoService tableInfo = new TableInfoService(object);
+        String tableName = SCHEMA + "." + tableInfo.defineTableName();
+        String idColumnName = tableInfo.getIdFieldName();
+        String sql = "DELETE FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
+        try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
+            st.executeUpdate(sql);
+            System.out.println("Deleted from DB element: " + object.getClass().getName() + ", id: " + id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
 

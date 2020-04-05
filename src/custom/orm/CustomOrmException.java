@@ -1,6 +1,8 @@
 package custom.orm;
 
 /**
+ * Custom exception for dealing with unforeseen situations when built-in exceptions cannot be used properly.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
