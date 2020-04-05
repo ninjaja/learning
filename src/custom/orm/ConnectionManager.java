@@ -1,4 +1,4 @@
-package custom_orm;
+package custom.orm;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
@@ -17,22 +17,20 @@ import java.util.ResourceBundle;
  */
 public class ConnectionManager {
 
-    public static void main(String[] args) {
-        initDataBase();
-    }
-
     private static Connection connection;
     private static String driverName;
-    static String url;
-    static String username;
-    static String password;
+    private static String url;
+    private static String username;
+    private static String password;
+    static String schema;
 
     static {
-        ResourceBundle resourceBundle = ResourceBundle.getBundle("custom_orm/connection");
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("custom/orm/connection");
         driverName = resourceBundle.getString("driverName");
         url = resourceBundle.getString("url");
         username = resourceBundle.getString("username");
         password = resourceBundle.getString("password");
+        schema = resourceBundle.getString("schema");
     }
 
     public static Connection getConnection() {
@@ -57,7 +55,7 @@ public class ConnectionManager {
     public static void initDataBase() {
         try (Connection connection = getConnection()) {
             ScriptRunner runner = new ScriptRunner(connection);
-            Reader reader = new BufferedReader(new FileReader("resources/custom_orm/orm_database.sql"));
+            Reader reader = new BufferedReader(new FileReader("resources/custom/orm/orm_database.sql"));
             runner.runScript(reader);
         } catch (IOException | SQLException e) {
             e.printStackTrace();
