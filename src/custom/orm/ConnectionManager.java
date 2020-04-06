@@ -25,6 +25,7 @@ public class ConnectionManager {
     private static String username;
     private static String password;
     static String schema;
+    static String mappingStrategy;
 
     static {
         ResourceBundle resourceBundle = ResourceBundle.getBundle("custom/orm/connection");
@@ -33,6 +34,7 @@ public class ConnectionManager {
         username = resourceBundle.getString("username");
         password = resourceBundle.getString("password");
         schema = resourceBundle.getString("schema");
+        mappingStrategy = resourceBundle.getString("defaultMappingStrategy");
     }
 
     public static Connection getConnection() {

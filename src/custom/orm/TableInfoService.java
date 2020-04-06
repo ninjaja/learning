@@ -1,8 +1,9 @@
 package custom.orm;
 
 import custom.orm.annotations.Column;
-import custom.orm.annotations.PrimaryKey;
+import custom.orm.annotations.Id;
 import custom.orm.annotations.Table;
+import custom.orm.annotations.Transient;
 import org.apache.commons.lang3.StringUtils;
 
 import java.beans.IntrospectionException;
@@ -22,6 +23,7 @@ import java.util.Objects;
  */
 public class TableInfoService {
 
+    private static final String MAPPING_STRATEGY = ConnectionManager.mappingStrategy;
     private Object entity;
 
     public TableInfoService(Object entity) {
@@ -43,13 +45,13 @@ public class TableInfoService {
         List<String> columnsNames = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
+            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class)) {
                 continue;
             }
             if (Objects.nonNull(field.getAnnotation(Column.class))) {
                 columnsNames.add(field.getAnnotation(Column.class).name());
             } else {
-                columnsNames.add(field.getName());
+                columnsNames.add(applyCase(field.getName()));
             }
         }
         return columnsNames.toString().replace("[", "").replace("]", "");
@@ -59,13 +61,13 @@ public class TableInfoService {
         List<String> columnsNames = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
+            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class)) {
                 continue;
             }
             if (Objects.nonNull(field.getAnnotation(Column.class))) {
                 columnsNames.add(field.getAnnotation(Column.class).name());
             } else {
-                columnsNames.add(field.getName());
+                columnsNames.add(applyCase(field.getName()));
             }
         }
         return columnsNames;
@@ -78,7 +80,7 @@ public class TableInfoService {
             if (Objects.nonNull(field.getAnnotation(Column.class))) {
                 columnsNames.add(field.getAnnotation(Column.class).name());
             } else {
-                columnsNames.add(field.getName());
+                columnsNames.add(applyCase(field.getName()));
             }
         }
         return columnsNames;
@@ -88,7 +90,7 @@ public class TableInfoService {
         List<String> values = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
+            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class)) {
                 continue;
             }
             Method getter = null;
@@ -114,7 +116,7 @@ public class TableInfoService {
         List<String> values = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
+            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class)) {
                 continue;
             }
             Method getter = null;
@@ -165,14 +167,19 @@ public class TableInfoService {
 
     String getIdFieldName() {
         Field[] fields = getFields();
+        String idFieldName = null;
         for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
+            if (field.isAnnotationPresent(Id.class)) {
                 if (field.isAnnotationPresent(Column.class)) {
                     return field.getAnnotation(Column.class).name();
                 }
-                return field.getName();
+                idFieldName = applyCase(field.getName());
             }
         }
-        return fields[0].getName();
+        return idFieldName;
+    }
+
+    private static String applyCase(String s) {
+        return MappingStrategy.valueOf(MAPPING_STRATEGY.toUpperCase()).defineCase(s);
     }
 }

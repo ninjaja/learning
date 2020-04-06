@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
@@ -107,7 +108,11 @@ public class OrmManager {
         }
         String sql = "UPDATE " + tableName + " SET " + assignments + " WHERE " + idColumnName + " = " + id;
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
-            st.executeUpdate(sql);
+            if (Objects.nonNull(getById(object.getClass(), id))) {
+                st.executeUpdate(sql);
+            } else {
+                throw new CustomOrmException("No entry to update with id: " + id);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

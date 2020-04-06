@@ -2,8 +2,8 @@ package custom.orm.models;
 
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
+import custom.orm.annotations.Id;
 import custom.orm.annotations.ManyToOne;
-import custom.orm.annotations.PrimaryKey;
 
 /**
  * Entity representing data of a sales transaction backed with the self-titled table in DB.
@@ -14,8 +14,8 @@ import custom.orm.annotations.PrimaryKey;
 @Entity
 public class Purchase {
 
+    @Id
     @Column(name = "purchase_id")
-    @PrimaryKey
     private int id;
 
     @ManyToOne(fk = "purchaser_id")

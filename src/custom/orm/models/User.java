@@ -2,7 +2,7 @@ package custom.orm.models;
 
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
-import custom.orm.annotations.PrimaryKey;
+import custom.orm.annotations.Id;
 
 /**
  * Entity representing a user which can buy and sell items backed with the self-titled table in DB.
@@ -13,8 +13,8 @@ import custom.orm.annotations.PrimaryKey;
 @Entity
 public class User {
 
+    @Id
     @Column(name = "user_id")
-    @PrimaryKey
     private int id;
 
     @Column(name = "full_name")
