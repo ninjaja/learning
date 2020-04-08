@@ -1,7 +1,8 @@
 package custom.orm;
 
 /**
- * Enumeration to select default mapping strategy for fields without @Column annotation. Depends on properties bundle.
+ * Enumeration to select default mapping strategy (in lower- or uppercase) for fields without @Column annotation.
+ * Initially is set in properties bundle.
  *
  * @author Dmitry Matrizaev
  * @since 1.0

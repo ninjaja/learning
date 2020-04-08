@@ -3,9 +3,14 @@ package custom.orm.models;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
+import custom.orm.annotations.OneToMany;
+import custom.orm.annotations.Transient;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Entity representing a user which can buy and sell items backed with the self-titled table in DB.
+ * Entity representing an auction user who can buy and sell items backed with the self-titled table in DB.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
@@ -24,13 +29,27 @@ public class User {
 
     private String password;
 
+    @OneToMany(mappedBy = "purchase_id")
+    Set<Purchase> purchases;
+
     public User(String fullName, String login, String password) {
         this.fullName = fullName;
         this.login = login;
         this.password = password;
+        purchases = new HashSet<>();
     }
 
     public User() {
+    }
+
+    public void addPurchase(Purchase purchase) {
+        purchases.add(purchase);
+        purchase.setPurchaser(this);
+    }
+
+    public void removePurchase(Purchase purchase) {
+        purchases.remove(purchase);
+        purchase.setPurchaser(null);
     }
 
     public int getId() {
@@ -63,6 +82,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Set<Purchase> getPurchases() {
+        return purchases;
+    }
+
+    public void setPurchases(Set<Purchase> purchases) {
+        this.purchases = purchases;
     }
 
     @Override

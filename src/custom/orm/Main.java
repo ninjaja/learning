@@ -1,5 +1,7 @@
 package custom.orm;
 
+import custom.orm.models.Item;
+import custom.orm.models.Purchase;
 import custom.orm.models.User;
 
 /**
@@ -24,6 +26,11 @@ public class Main {
         System.out.println(manager.getById(User.class, 1));
         manager.delete(user2, 2);
         System.out.println(manager.getAll(User.class));
+
+        //test add user to purchase, create purchase:
+        Item item1 = new Item("item1", "item1 description", 100.00);
+        manager.create(item1);
+//        Purchase purchase1 = new Purchase(user1, )
 
     }
 }

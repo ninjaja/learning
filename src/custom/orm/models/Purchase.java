@@ -1,12 +1,15 @@
 package custom.orm.models;
 
+import custom.orm.FetchType;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
+import custom.orm.annotations.JoinColumn;
 import custom.orm.annotations.ManyToOne;
+import custom.orm.annotations.OneToOne;
 
 /**
- * Entity representing data of a sales transaction backed with the self-titled table in DB.
+ * Entity representing data of a sales transaction of an auction backed with the self-titled table in DB.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
@@ -18,10 +21,12 @@ public class Purchase {
     @Column(name = "purchase_id")
     private int id;
 
-    @ManyToOne(fk = "purchaser_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchaser_id")
     private User purchaser;
 
-    @ManyToOne(fk = "item_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id")
     private Item item;
 
     private int amount;

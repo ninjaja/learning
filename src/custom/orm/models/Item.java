@@ -1,11 +1,13 @@
 package custom.orm.models;
 
+import custom.orm.FetchType;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
+import custom.orm.annotations.OneToOne;
 
 /**
- * Entity representing a selling item backed with the self-titled table in DB.
+ * Entity representing a selling item/auction that can be sold/bought only once and backed with the self-titled table in DB.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
@@ -17,8 +19,8 @@ public class Item {
     @Column(name = "item_id")
     private int id;
 
-    @Column(name = "seller_id")
-    private User seller;
+    @OneToOne(fetch = FetchType.LAZY)
+    private Purchase purchase;
 
     private String title;
 
@@ -26,8 +28,7 @@ public class Item {
 
     private double price;
 
-    public Item(User seller, String title, String description, double price) {
-        this.seller = seller;
+    public Item(String title, String description, double price) {
         this.title = title;
         this.description = description;
         this.price = price;
@@ -42,14 +43,6 @@ public class Item {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public User getSeller() {
-        return seller;
-    }
-
-    public void setSeller(User seller) {
-        this.seller = seller;
     }
 
     public String getTitle() {
@@ -76,6 +69,14 @@ public class Item {
         this.price = price;
     }
 
+    public Purchase getPurchase() {
+        return purchase;
+    }
+
+    public void setPurchase(Purchase purchase) {
+        this.purchase = purchase;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -93,6 +94,6 @@ public class Item {
 
     @Override
     public String toString() {
-        return "Item{" + "id=" + id + ", seller=" + seller + ", title='" + title + '\'' + ", description='" + description + '\'' + ", price=" + price + '}';
+        return "Item{" + "id=" + id + ", title='" + title + '\'' + ", description='" + description + '\'' + ", price=" + price + '}';
     }
 }

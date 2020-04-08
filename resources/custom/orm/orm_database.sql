@@ -11,14 +11,10 @@ CREATE TABLE IF NOT EXISTS orm.user (
 
 CREATE TABLE IF NOT EXISTS orm.item (
     item_id MEDIUMINT AUTO_INCREMENT,
-    seller_id MEDIUMINT NOT NULL,
     title CHAR(100) NOT NULL,
     description CHAR(200) NOT NULL,
     price DECIMAL(5,2) NOT NULL,
-    PRIMARY KEY(item_id),
-    FOREIGN KEY (seller_id)
-        REFERENCES user(user_id)
-        ON DELETE CASCADE
+    PRIMARY KEY(item_id)
 );
 
 CREATE TABLE IF NOT EXISTS orm.purchase (

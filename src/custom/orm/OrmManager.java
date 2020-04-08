@@ -1,12 +1,18 @@
 package custom.orm;
 
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
@@ -46,6 +52,15 @@ public class OrmManager {
         ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
         String idColumnName = tableInfo.getIdFieldName();
+
+        /*//inner entities processing
+        Map<String, Field> fieldsWithInnerEntities = tableInfo.getFieldsWithInnerEntities();
+        if (!fieldsWithInnerEntities.isEmpty()) {
+            String joinTableName = SCHEMA +
+            Set<?> innerObjects = new HashSet<>();
+            String innerEntries = "SELECT * FROM " + joinTableName + " WHERE "
+        }*/
+
         String sql = "SELECT * FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
         List<T> results;
         T result = null;
