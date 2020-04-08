@@ -19,8 +19,8 @@ public class Item {
     @Column(name = "item_id")
     private int id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    private Purchase purchase;
+    /*@OneToOne(fetch = FetchType.LAZY)
+    private Purchase purchase;*/
 
     private String title;
 
@@ -69,13 +69,13 @@ public class Item {
         this.price = price;
     }
 
-    public Purchase getPurchase() {
+    /*public Purchase getPurchase() {
         return purchase;
     }
 
     public void setPurchase(Purchase purchase) {
         this.purchase = purchase;
-    }
+    }*/
 
     @Override
     public boolean equals(Object o) {

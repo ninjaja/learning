@@ -56,8 +56,7 @@ public class TableInfoService {
             }
             if (field.isAnnotationPresent(JoinColumn.class)) {
                 columnsNames.add(field.getAnnotation(JoinColumn.class).name());
-            }
-            if (Objects.nonNull(field.getAnnotation(Column.class))) {
+            } else if (field.isAnnotationPresent(Column.class)) {
                 columnsNames.add(field.getAnnotation(Column.class).name());
             } else {
                 columnsNames.add(applyCase(field.getName()));
@@ -102,23 +101,32 @@ public class TableInfoService {
             if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(OneToMany.class)) {
                 continue;
             }
-            // TODO: 08.04.2020 пытаемся получить id вложенного entity, но... объект не знает свой id :(
             if (field.isAnnotationPresent(JoinColumn.class)) {
+                Object innerInstance = null;
+                Method innerInstanceGetter;
+                Class innerClass = field.getType();
+                try {
+                    innerInstanceGetter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
+                    innerInstance = innerInstanceGetter.invoke(entity);
+                } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
                 String innerEntityId = null;
-                Class innerClass = field.getDeclaringClass();
                 Field[] innerClassFields = innerClass.getDeclaredFields();
                 for (Field innerField : innerClassFields) {
                     if (innerField.isAnnotationPresent(Id.class)) {
                         Method innerEntityIdGetter;
                         try {
                             innerEntityIdGetter = new PropertyDescriptor(innerField.getName(), innerClass).getReadMethod();
-                            innerEntityId = innerEntityIdGetter.invoke(innerClass.newInstance()).toString();
-                        } catch (IntrospectionException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            innerEntityId = innerEntityIdGetter.invoke(innerInstance).toString();
+                            break;
+                        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
                             e.printStackTrace();
                         }
                     }
                 }
-                values.add(innerEntityId);
+                values.add("'" + innerEntityId + "'");
+                continue;
             }
             Method getter = null;
             try {
@@ -216,7 +224,7 @@ public class TableInfoService {
         return fieldsWithInnerEntities;
     }
 
-    String getIdFieldName() {
+    String getIdColumnName() {
         Field[] fields = getFields();
         String idFieldName = null;
         for (Field field : fields) {
@@ -228,6 +236,17 @@ public class TableInfoService {
             }
         }
         return idFieldName;
+    }
+
+    Field getIdField() {
+        Field[] fields = getFields();
+        Field idField = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Id.class)) {
+                idField = field;
+            }
+        }
+        return idField;
     }
 
     private static String applyCase(String s) {

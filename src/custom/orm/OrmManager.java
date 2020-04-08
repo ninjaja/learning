@@ -1,18 +1,17 @@
 package custom.orm;
 
-import org.apache.commons.collections4.CollectionUtils;
-
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
@@ -33,8 +32,14 @@ public class OrmManager {
         String fieldValuesString = tableInfo.getValuesWithoutIdString();
         String sql = "INSERT INTO " + tableName + "(" + rowsString + ")" + " VALUES (" + fieldValuesString + ");";
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
-            st.executeUpdate(sql);
-        } catch (SQLException e) {
+            st.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+            //NOTE: further goes a "dirty trick" to set id to the persisted object from DB, thus changing input argument which is no good in real projects
+            ResultSet rs = st.getGeneratedKeys();
+            rs.next();
+            Field idField = tableInfo.getIdField();
+            Method setter = new PropertyDescriptor(idField.getName(), object.getClass()).getWriteMethod();
+            setter.invoke(object, rs.getInt(1));
+        } catch (SQLException | IntrospectionException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
@@ -51,7 +56,7 @@ public class OrmManager {
         TableInfoService tableInfo = new TableInfoService(object);
         ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
-        String idColumnName = tableInfo.getIdFieldName();
+        String idColumnName = tableInfo.getIdColumnName();
 
         /*//inner entities processing
         Map<String, Field> fieldsWithInnerEntities = tableInfo.getFieldsWithInnerEntities();
@@ -107,7 +112,7 @@ public class OrmManager {
     public void update(Object object, int id) {
         TableInfoService tableInfo = new TableInfoService(object);
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
-        String idColumnName = tableInfo.getIdFieldName();
+        String idColumnName = tableInfo.getIdColumnName();
         List<String> columnsNames = tableInfo.getColumnsNamesWithoutId();
         List<String> fieldsValues = tableInfo.getValuesWithoutId();
         StringBuilder assignments = new StringBuilder();
@@ -136,7 +141,7 @@ public class OrmManager {
     public void delete(Object object, int id) {
         TableInfoService tableInfo = new TableInfoService(object);
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
-        String idColumnName = tableInfo.getIdFieldName();
+        String idColumnName = tableInfo.getIdColumnName();
         String sql = "DELETE FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             st.executeUpdate(sql);

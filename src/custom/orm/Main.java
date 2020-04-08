@@ -22,15 +22,17 @@ public class Main {
         manager.create(user3);
         System.out.println(manager.getById(User.class, 1));
         user1.setFullName("Not First User");
+        System.out.println("user1 id: " + user1.getId());
         manager.update(user1, 1);
         System.out.println(manager.getById(User.class, 1));
         manager.delete(user2, 2);
         System.out.println(manager.getAll(User.class));
 
-        //test add user to purchase, create purchase:
+        //test adding user to purchase, create purchase:
         Item item1 = new Item("item1", "item1 description", 100.00);
         manager.create(item1);
-//        Purchase purchase1 = new Purchase(user1, )
+        Purchase purchase1 = new Purchase(user1, item1, 1);
+        manager.create(purchase1);
 
     }
 }
