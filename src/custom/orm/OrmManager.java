@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -48,9 +49,7 @@ public class OrmManager {
         Object object = null;
         try {
             object = type.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         TableInfoService tableInfo = new TableInfoService(object);
@@ -58,29 +57,49 @@ public class OrmManager {
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
         String idColumnName = tableInfo.getIdColumnName();
 
-        /*//inner entities processing
-        Map<String, Field> fieldsWithInnerEntities = tableInfo.getFieldsWithInnerEntities();
-        if (!fieldsWithInnerEntities.isEmpty()) {
-            String joinTableName = SCHEMA +
-            Set<?> innerObjects = new HashSet<>();
-            String innerEntries = "SELECT * FROM " + joinTableName + " WHERE "
-        }*/
-
         String sql = "SELECT * FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
         List<T> results;
         T result = null;
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             ResultSet resultSet = st.executeQuery(sql);
-            results = mapper.getObject(resultSet, type);
+            results = mapper.getObjects(resultSet, type);
             int resultsSize = results.size();
             if (resultsSize == 1) {
                 result = results.get(0);
+
+                //inner entities processing:
+                Map<String, Field> fieldsWithInnerEntities = TableInfoService.getFieldsWithInnerEntities(result);
+                if (!fieldsWithInnerEntities.isEmpty()) {
+                    for (Map.Entry<String, Field> entry : fieldsWithInnerEntities.entrySet()) {
+                        String innerTableName = SCHEMA + "." + entry.getKey();
+                        Class innerEntityClass = entry.getValue().getType();
+                        Field[] innerEntityFields = innerEntityClass.getDeclaredFields();
+                        String innerEntityFieldName = entry.getValue().getName();
+                        Method innerEntityGetter = new PropertyDescriptor(innerEntityFieldName, result.getClass()).getReadMethod();
+                        Object innerInstance = innerEntityGetter.invoke(result);
+
+                        // getting inner entity id value:
+                        String innerEntityIdColumn = TableInfoService.getIdColumnName(innerEntityFields);
+                        String innerEntityIdFieldName = TableInfoService.getIdField(innerEntityFields).getName();
+                        Method innerEntityIdGetter = new PropertyDescriptor(innerEntityIdFieldName, innerEntityClass).getReadMethod();
+                        String innerEntityIdValue = innerEntityIdGetter.invoke(innerInstance).toString();
+
+                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + innerEntityIdColumn + " = " + innerEntityIdValue;
+                        ResultSet innerResultSet = st.executeQuery(innerSql);
+                        ResultSetToObjectMapper<T> innerMapper = new ResultSetToObjectMapper<>();
+                        // populate inner instances:
+                        Object innerBean = innerMapper.getObjects(innerResultSet, innerEntityClass).get(0);
+                        Method innerBeanSetter = new PropertyDescriptor(innerEntityFieldName, result.getClass()).getWriteMethod();
+                        innerBeanSetter.invoke(result, innerBean);
+                    }
+                }
+
             } else if (resultsSize > 1) {
                 throw new CustomOrmException("Bad id: more than one element found");
             } else {
                 throw new CustomOrmException("Bad id: no elements found");
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IntrospectionException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
         return result;
@@ -102,7 +121,7 @@ public class OrmManager {
         List<T> results = new ArrayList<>();
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             ResultSet resultSet = st.executeQuery(sql);
-            results = mapper.getObject(resultSet, type);
+            results = mapper.getObjects(resultSet, type);
         } catch (SQLException e) {
             e.printStackTrace();
         }

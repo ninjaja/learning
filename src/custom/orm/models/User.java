@@ -29,7 +29,7 @@ public class User {
 
     private String password;
 
-    @OneToMany(mappedBy = "purchase_id")
+    @OneToMany(mappedBy = "purchaser")
     Set<Purchase> purchases;
 
     public User(String fullName, String login, String password) {

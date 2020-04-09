@@ -6,6 +6,8 @@ import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
 import custom.orm.annotations.OneToOne;
 
+import java.math.BigDecimal;
+
 /**
  * Entity representing a selling item/auction that can be sold/bought only once and backed with the self-titled table in DB.
  *
@@ -26,9 +28,9 @@ public class Item {
 
     private String description;
 
-    private double price;
+    private BigDecimal price;
 
-    public Item(String title, String description, double price) {
+    public Item(String title, String description, BigDecimal price) {
         this.title = title;
         this.description = description;
         this.price = price;
@@ -61,11 +63,11 @@ public class Item {
         this.description = description;
     }
 
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

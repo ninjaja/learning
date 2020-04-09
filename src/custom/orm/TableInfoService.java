@@ -3,10 +3,11 @@ package custom.orm;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Id;
 import custom.orm.annotations.JoinColumn;
+import custom.orm.annotations.ManyToOne;
 import custom.orm.annotations.OneToMany;
+import custom.orm.annotations.OneToOne;
 import custom.orm.annotations.Table;
 import custom.orm.annotations.Transient;
-import org.apache.commons.lang3.StringUtils;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -42,7 +43,7 @@ public class TableInfoService {
         if (hasTableAnnotation) {
             tableName = entity.getClass().getAnnotation(Table.class).name();
         } else {
-            tableName = StringUtils.lowerCase(entity.getClass().getSimpleName());
+            tableName = applyCase(entity.getClass().getSimpleName());
         }
         return tableName;
     }
@@ -205,23 +206,26 @@ public class TableInfoService {
      *
      * @return Map<K, V> with inner entity table name as K and the field itself as V
      */
-// TODO: 08.04.2020 нужен другой подход, т.к. Map будет содержать один и тот же ключ(имя класса/таблицы вложенной entity) и перетирать все вложенные entity
-    Map<String, Field> getFieldsWithInnerEntities() {
-        Field[] allFields = getFields();
-        Map<String, Field> fieldsWithInnerEntities = new HashMap<>();
+    static Map<String, Field> getFieldsWithInnerEntities(Object object) {
+        Field[] allFields = object.getClass().getDeclaredFields();
+        Map<String, Field> map = new HashMap<>();
         for (Field field : allFields) {
             if (field.isAnnotationPresent(OneToMany.class)) {
                 Type type = field.getGenericType();
-                String tableName = null;
+                String tableName;
                 if (type instanceof ParameterizedType) {
                     ParameterizedType pType = (ParameterizedType) type;
                     Type resultType = pType.getActualTypeArguments()[0];
-                    tableName = ((ParameterizedType) resultType).getRawType().getTypeName().toLowerCase();
-                    fieldsWithInnerEntities.put(tableName, field);
+                    tableName = applyCase(((ParameterizedType) resultType).getRawType().getTypeName());
+                    map.put(tableName, field);
                 }
+            } else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
+                Class<?> type = field.getType();
+                String tableName = applyCase(type.getSimpleName());
+                map.put(tableName, field);
             }
         }
-        return fieldsWithInnerEntities;
+        return map;
     }
 
     String getIdColumnName() {
@@ -236,6 +240,29 @@ public class TableInfoService {
             }
         }
         return idFieldName;
+    }
+
+    static String getIdColumnName(Field[] fields) {
+        String idFieldName = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Id.class)) {
+                if (field.isAnnotationPresent(Column.class)) {
+                    return field.getAnnotation(Column.class).name();
+                }
+                idFieldName = applyCase(field.getName());
+            }
+        }
+        return idFieldName;
+    }
+
+    static Field getIdField(Field[] fields) {
+        Field idField = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Id.class)) {
+                idField = field;
+            }
+        }
+        return idField;
     }
 
     Field getIdField() {

@@ -2,6 +2,9 @@ package custom.orm;
 
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
+import custom.orm.annotations.JoinColumn;
+import custom.orm.annotations.ManyToOne;
+import custom.orm.annotations.OneToOne;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -27,7 +30,7 @@ public class ResultSetToObjectMapper<T> {
      * @param type Class of the resulting Object
      * @return resulting List of objects
      */
-    public List<T> getObject(ResultSet rs, Class type) {
+    public List<T> getObjects(ResultSet rs, Class type) {
         List<T> results = new ArrayList<>();
         if (type.isAnnotationPresent(Entity.class)) {
             try {
@@ -39,8 +42,27 @@ public class ResultSetToObjectMapper<T> {
                         String columnName = metaData.getColumnName(i + 1);
                         Object value = rs.getObject(i + 1);
                         for (Field field : fields) {
-                            String mappedName = field.isAnnotationPresent(Column.class) ?
-                                    field.getAnnotation(Column.class).name() : field.getName();
+                            String mappedName = null;
+                            if (field.isAnnotationPresent(Column.class)) {
+                                mappedName = field.getAnnotation(Column.class).name();
+
+                                // populate inner entities with empty instances (null-values) and set them their id's
+                            } else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
+                                Class<?> innerEntityType = field.getType();
+                                Object innerInstance = (innerEntityType).newInstance();
+                                if (field.isAnnotationPresent(JoinColumn.class) && columnName.equalsIgnoreCase(field.getAnnotation(JoinColumn.class).name())) {
+                                    Method innerEntitySetter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
+                                    // set empty inner instance:
+                                    innerEntitySetter.invoke(bean, innerInstance);
+                                    Field innerEntityIdField = TableInfoService.getIdField(innerEntityType.getDeclaredFields());
+                                    Method innerEntityIdSetter = new PropertyDescriptor(innerEntityIdField.getName(), innerEntityType).getWriteMethod();
+                                    // set id to inner instance:
+                                    innerEntityIdSetter.invoke(innerInstance, value);
+                                }
+                            }
+                            else {
+                                mappedName = field.getName();
+                            }
                             if (columnName.equalsIgnoreCase(mappedName) && Objects.nonNull(value)) {
                                 Method setter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
                                 if (Objects.nonNull(setter)) {
