@@ -1,15 +1,22 @@
 package custom.orm;
 
+import custom.orm.annotations.JoinColumn;
+import custom.orm.annotations.OneToMany;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,40 +73,14 @@ public class OrmManager {
             int resultsSize = results.size();
             if (resultsSize == 1) {
                 result = results.get(0);
-
-                //inner entities processing:
-                Map<String, Field> fieldsWithInnerEntities = TableInfoService.getFieldsWithInnerEntities(result);
-                if (!fieldsWithInnerEntities.isEmpty()) {
-                    for (Map.Entry<String, Field> entry : fieldsWithInnerEntities.entrySet()) {
-                        String innerTableName = SCHEMA + "." + entry.getKey();
-                        Class innerEntityClass = entry.getValue().getType();
-                        Field[] innerEntityFields = innerEntityClass.getDeclaredFields();
-                        String innerEntityFieldName = entry.getValue().getName();
-                        Method innerEntityGetter = new PropertyDescriptor(innerEntityFieldName, result.getClass()).getReadMethod();
-                        Object innerInstance = innerEntityGetter.invoke(result);
-
-                        // getting inner entity id value:
-                        String innerEntityIdColumn = TableInfoService.getIdColumnName(innerEntityFields);
-                        String innerEntityIdFieldName = TableInfoService.getIdField(innerEntityFields).getName();
-                        Method innerEntityIdGetter = new PropertyDescriptor(innerEntityIdFieldName, innerEntityClass).getReadMethod();
-                        String innerEntityIdValue = innerEntityIdGetter.invoke(innerInstance).toString();
-
-                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + innerEntityIdColumn + " = " + innerEntityIdValue;
-                        ResultSet innerResultSet = st.executeQuery(innerSql);
-                        ResultSetToObjectMapper<T> innerMapper = new ResultSetToObjectMapper<>();
-                        // populate inner instances:
-                        Object innerBean = innerMapper.getObjects(innerResultSet, innerEntityClass).get(0);
-                        Method innerBeanSetter = new PropertyDescriptor(innerEntityFieldName, result.getClass()).getWriteMethod();
-                        innerBeanSetter.invoke(result, innerBean);
-                    }
-                }
+                processInnerEntities(result);
 
             } else if (resultsSize > 1) {
                 throw new CustomOrmException("Bad id: more than one element found");
             } else {
                 throw new CustomOrmException("Bad id: no elements found");
             }
-        } catch (SQLException | IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return result;
@@ -109,9 +90,7 @@ public class OrmManager {
         Object object = null;
         try {
             object = type.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         TableInfoService tableInfo = new TableInfoService(object);
@@ -119,9 +98,13 @@ public class OrmManager {
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
         String sql = "SELECT * FROM " + tableName + ";";
         List<T> results = new ArrayList<>();
+
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             ResultSet resultSet = st.executeQuery(sql);
             results = mapper.getObjects(resultSet, type);
+            for (T result : results) {
+                processInnerEntities(result);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -166,6 +149,80 @@ public class OrmManager {
             st.executeUpdate(sql);
             System.out.println("Deleted from DB element: " + object.getClass().getName() + ", id: " + id);
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private <T> void processInnerEntities(Object inputObject) {
+        try(Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
+            Map<String, Field> fieldsWithInnerEntities = TableInfoService.getFieldsWithInnerEntities(inputObject);
+            if (!fieldsWithInnerEntities.isEmpty()) {
+                for (Map.Entry<String, Field> entry : fieldsWithInnerEntities.entrySet()) {
+                    String innerTableName = SCHEMA + "." + entry.getKey();
+                    Type innerEntityType = entry.getValue().getGenericType();
+                    Class<?> innerEntityClass;
+                    if (innerEntityType instanceof ParameterizedType && entry.getValue().isAnnotationPresent(OneToMany.class)) {
+                        //OneToMany case (inner collection):
+                        ParameterizedType pType = (ParameterizedType) innerEntityType;
+                        //get collection's generic parameter:
+                        innerEntityClass = (Class<?>) pType.getActualTypeArguments()[0];
+                        String mappedFieldName = entry.getValue().getAnnotation(OneToMany.class).mappedBy();
+                        String mappedIdColumnName = innerEntityClass.getDeclaredField(mappedFieldName).getAnnotation(JoinColumn.class).name();
+                        Method idGetter = new PropertyDescriptor(TableInfoService.getIdField(inputObject.getClass().getDeclaredFields()).getName(), inputObject.getClass()).getReadMethod();
+                        int idValue = (Integer) idGetter.invoke(inputObject);
+
+                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + mappedIdColumnName + " = " + idValue;
+                        List<T> innerBeans;
+                        try (ResultSet innerResultSet = st.executeQuery(innerSql)) {
+                            ResultSetToObjectMapper<T> innerMapper = new ResultSetToObjectMapper<>();
+                            innerBeans = innerMapper.getObjects(innerResultSet, innerEntityClass);
+                        }
+                        if (!innerBeans.isEmpty()) {
+                            // populate inner instances:
+                            Method collectionFieldGetter = new PropertyDescriptor(entry.getValue().getName(), inputObject.getClass()).getReadMethod();
+                            Object collection = collectionFieldGetter.invoke(inputObject);
+                            if (Objects.isNull(collection)) {
+                                Type collectionType = entry.getValue().getType();
+                                if (collectionType.getTypeName().contains("Set")) {
+                                    collection = new HashSet<>();
+                                } else if (collectionType.getTypeName().contains("List")) {
+                                    collection = new LinkedList<>();
+                                } else {
+                                    throw new CustomOrmException("Unknown collection type in @OneToMany field");
+                                }
+                            }
+                            Method add = collection.getClass().getDeclaredMethod("add", Object.class);
+                            for (T innerBean : innerBeans) {
+                                add.invoke(collection, innerBean);
+                            }
+                        }
+                    } else {
+                        //ManyToOne case (inner entity):
+                        innerEntityClass = entry.getValue().getType();
+                        Field[] innerEntityFields = innerEntityClass.getDeclaredFields();
+                        String innerEntityFieldName = entry.getValue().getName();
+                        Method innerEntityGetter = new PropertyDescriptor(innerEntityFieldName, inputObject.getClass()).getReadMethod();
+                        Object innerInstance = innerEntityGetter.invoke(inputObject);
+
+                        // getting inner entity id value:
+                        String innerEntityIdColumn = TableInfoService.getIdColumnName(innerEntityFields);
+                        String innerEntityIdFieldName = TableInfoService.getIdField(innerEntityFields).getName();
+                        Method innerEntityIdGetter = new PropertyDescriptor(innerEntityIdFieldName, innerEntityClass).getReadMethod();
+                        String innerEntityIdValue = innerEntityIdGetter.invoke(innerInstance).toString();
+
+                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + innerEntityIdColumn + " = " + innerEntityIdValue;
+                        Object innerBean;
+                        try (ResultSet innerResultSet = st.executeQuery(innerSql)) {
+                            ResultSetToObjectMapper<T> innerMapper = new ResultSetToObjectMapper<>();
+                            // populate inner instances:
+                            innerBean = innerMapper.getObjects(innerResultSet, innerEntityClass).get(0);
+                        }
+                        Method innerBeanSetter = new PropertyDescriptor(innerEntityFieldName, inputObject.getClass()).getWriteMethod();
+                        innerBeanSetter.invoke(inputObject, innerBean);
+                    }
+                }
+            }
+        } catch (NoSuchFieldException | NoSuchMethodException | IntrospectionException | InvocationTargetException | IllegalAccessException | SQLException e) {
             e.printStackTrace();
         }
     }

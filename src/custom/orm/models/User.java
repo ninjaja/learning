@@ -36,7 +36,6 @@ public class User {
         this.fullName = fullName;
         this.login = login;
         this.password = password;
-        purchases = new HashSet<>();
     }
 
     public User() {
@@ -112,6 +111,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" + "id=" + id + ", fullName='" + fullName + '\'' + ", login='" + login + '\'' + ", password='" + password + '\'' + '}';
+        return "User{" + "id=" + id + ", fullName='" + fullName + '\'' + ", login='" + login + '\'' + ", password='" + password + '\'' + ", purchases=" + purchases + '}';
     }
 }

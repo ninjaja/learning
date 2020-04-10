@@ -215,8 +215,8 @@ public class TableInfoService {
                 String tableName;
                 if (type instanceof ParameterizedType) {
                     ParameterizedType pType = (ParameterizedType) type;
-                    Type resultType = pType.getActualTypeArguments()[0];
-                    tableName = applyCase(((ParameterizedType) resultType).getRawType().getTypeName());
+                    Class<?> resultType = (Class<?>) pType.getActualTypeArguments()[0];
+                    tableName = applyCase(resultType.getSimpleName());
                     map.put(tableName, field);
                 }
             } else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
