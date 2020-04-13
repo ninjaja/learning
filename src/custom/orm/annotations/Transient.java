@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Marks a field as not serializable in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

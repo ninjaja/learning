@@ -1,5 +1,6 @@
-package custom.orm;
+package custom.orm.service;
 
+import custom.orm.exception.CustomOrmException;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Id;
 import custom.orm.annotations.JoinColumn;
@@ -8,6 +9,8 @@ import custom.orm.annotations.OneToMany;
 import custom.orm.annotations.OneToOne;
 import custom.orm.annotations.Table;
 import custom.orm.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -23,13 +26,14 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Service layer for dealing with entities fields and their values.
+ * Service layer for to work with entities fields and their values.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
 public class TableInfoService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TableInfoService.class);
     private static final String MAPPING_STRATEGY = ConnectionManager.mappingStrategy;
     private Object entity;
 
@@ -82,19 +86,6 @@ public class TableInfoService {
         return columnsNames;
     }
 
-    List<String> getColumnsNames() {
-        List<String> columnsNames = new ArrayList<>();
-        Field[] fields = getFields();
-        for (Field field : fields) {
-            if (Objects.nonNull(field.getAnnotation(Column.class))) {
-                columnsNames.add(field.getAnnotation(Column.class).name());
-            } else {
-                columnsNames.add(applyCase(field.getName()));
-            }
-        }
-        return columnsNames;
-    }
-
     String getValuesWithoutIdString() {
         List<String> values = new ArrayList<>();
         Field[] fields = getFields();
@@ -105,12 +96,12 @@ public class TableInfoService {
             if (field.isAnnotationPresent(JoinColumn.class)) {
                 Object innerInstance = null;
                 Method innerInstanceGetter;
-                Class innerClass = field.getType();
+                Class<?> innerClass = field.getType();
                 try {
                     innerInstanceGetter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
                     innerInstance = innerInstanceGetter.invoke(entity);
                 } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.getMessage());
                 }
                 String innerEntityId = null;
                 Field[] innerClassFields = innerClass.getDeclaredFields();
@@ -122,7 +113,7 @@ public class TableInfoService {
                             innerEntityId = innerEntityIdGetter.invoke(innerInstance).toString();
                             break;
                         } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-                            e.printStackTrace();
+                            LOGGER.error(e.getMessage());
                         }
                     }
                 }
@@ -133,13 +124,13 @@ public class TableInfoService {
             try {
                 getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
             } catch (IntrospectionException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage());
             }
             if (Objects.nonNull(getter)) {
                 try {
                     values.add("'" + getter.invoke(entity).toString() + "'");
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.getMessage());
                 }
             } else {
                 throw new CustomOrmException("No getter() found for field: " + field.getName());
@@ -159,36 +150,13 @@ public class TableInfoService {
             try {
                 getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
             } catch (IntrospectionException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage());
             }
             if (Objects.nonNull(getter)) {
                 try {
                     values.add("'" + getter.invoke(entity).toString() + "'");
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                throw new CustomOrmException("No getter() found for field: " + field.getName());
-            }
-        }
-        return values;
-    }
-
-    List<String> getValues() {
-        List<String> values = new ArrayList<>();
-        Field[] fields = getFields();
-        for (Field field : fields) {
-            Method getter = null;
-            try {
-                getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
-            } catch (IntrospectionException e) {
-                e.printStackTrace();
-            }
-            if (Objects.nonNull(getter)) {
-                try {
-                    values.add(getter.invoke(entity).toString());
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.getMessage());
                 }
             } else {
                 throw new CustomOrmException("No getter() found for field: " + field.getName());
@@ -202,7 +170,7 @@ public class TableInfoService {
     }
 
     /**
-     * Method to get inner entity's info, such as its table name and field containing the inner entity.
+     * Gets inner entity's info, such as its table name and field containing the inner entity.
      *
      * @return Map<K, V> with inner entity table name as K and the field itself as V
      */
@@ -256,17 +224,6 @@ public class TableInfoService {
     }
 
     static Field getIdField(Field[] fields) {
-        Field idField = null;
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Id.class)) {
-                idField = field;
-            }
-        }
-        return idField;
-    }
-
-    Field getIdField() {
-        Field[] fields = getFields();
         Field idField = null;
         for (Field field : fields) {
             if (field.isAnnotationPresent(Id.class)) {

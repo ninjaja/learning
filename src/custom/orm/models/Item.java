@@ -1,15 +1,13 @@
 package custom.orm.models;
 
-import custom.orm.FetchType;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
-import custom.orm.annotations.OneToOne;
 
 import java.math.BigDecimal;
 
 /**
- * Entity representing a selling item/auction that can be sold/bought only once and backed with the self-titled table in DB.
+ * Entity representing a selling item/auction that can be sold/bought only once and is stored within the self-titled table in DB.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
@@ -20,9 +18,6 @@ public class Item {
     @Id
     @Column(name = "item_id")
     private int id;
-
-    /*@OneToOne(fetch = FetchType.LAZY)
-    private Purchase purchase;*/
 
     private String title;
 
@@ -70,14 +65,6 @@ public class Item {
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
-
-    /*public Purchase getPurchase() {
-        return purchase;
-    }
-
-    public void setPurchase(Purchase purchase) {
-        this.purchase = purchase;
-    }*/
 
     @Override
     public boolean equals(Object o) {

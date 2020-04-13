@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Specifies an id field of an entity
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

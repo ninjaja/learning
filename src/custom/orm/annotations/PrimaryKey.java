@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Specifies a field used as a primary key in DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

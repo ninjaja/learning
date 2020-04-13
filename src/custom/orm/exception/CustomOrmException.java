@@ -1,7 +1,7 @@
-package custom.orm;
+package custom.orm.exception;
 
 /**
- * Custom exception for dealing with unforeseen situations when built-in exceptions cannot be used properly.
+ * Custom exception for cases when built-in exceptions cannot be used properly.
  *
  * @author Dmitry Matrizaev
  * @since 1.0

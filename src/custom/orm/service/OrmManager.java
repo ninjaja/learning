@@ -1,7 +1,10 @@
-package custom.orm;
+package custom.orm.service;
 
+import custom.orm.exception.CustomOrmException;
 import custom.orm.annotations.JoinColumn;
 import custom.orm.annotations.OneToMany;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -31,8 +34,13 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
  */
 public class OrmManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrmManager.class);
     private static final String SCHEMA = ConnectionManager.schema;
 
+    /**
+     * Saves an Object to DB.
+     * @param object Object to save
+     */
     public void create(Object object) {
         TableInfoService tableInfo = new TableInfoService(object);
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
@@ -42,22 +50,30 @@ public class OrmManager {
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             st.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
             //NOTE: further goes a "dirty trick" to set id to the persisted object from DB, thus changing input argument which is no good in real projects
-            ResultSet rs = st.getGeneratedKeys();
-            rs.next();
-            Field idField = tableInfo.getIdField();
-            Method setter = new PropertyDescriptor(idField.getName(), object.getClass()).getWriteMethod();
-            setter.invoke(object, rs.getInt(1));
+            try (ResultSet rs = st.getGeneratedKeys()) {
+                rs.next();
+                Field idField = TableInfoService.getIdField(object.getClass().getDeclaredFields());
+                Method setter = new PropertyDescriptor(idField.getName(), object.getClass()).getWriteMethod();
+                setter.invoke(object, rs.getInt(1));
+            }
         } catch (SQLException | IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 
+    /**
+     * Retrieves an Object from DB with known Object Class and id.
+     * @param type Object's class to cast to
+     * @param id id of the Object in DB
+     * @param <T> the type to cast this object to
+     * @return retrieved Object
+     */
     public <T> T getById(Class<T> type, int id) {
         Object object = null;
         try {
             object = type.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         TableInfoService tableInfo = new TableInfoService(object);
         ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
@@ -81,17 +97,23 @@ public class OrmManager {
                 throw new CustomOrmException("Bad id: no elements found");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return result;
     }
 
+    /**
+     * Retreives all Objects of specified type found in DB.
+     * @param type Object's class to cast to
+     * @param <T> the type to cast this object to
+     * @return all found objects as List
+     */
     public <T> List<T> getAll(Class<T> type) {
         Object object = null;
         try {
             object = type.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         TableInfoService tableInfo = new TableInfoService(object);
         ResultSetToObjectMapper<T> mapper = new ResultSetToObjectMapper<>();
@@ -106,11 +128,16 @@ public class OrmManager {
                 processInnerEntities(result);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return results;
     }
 
+    /**
+     * Updates object in DB by specified id. If object not found {@code CustomOrmException} is thrown.
+     * @param object object to update
+     * @param id object's id
+     */
     public void update(Object object, int id) {
         TableInfoService tableInfo = new TableInfoService(object);
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
@@ -136,10 +163,15 @@ public class OrmManager {
                 throw new CustomOrmException("No entry to update with id: " + id);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 
+    /**
+     * Removes object from DB by id.
+     * @param object object to delete
+     * @param id id of the object
+     */
     public void delete(Object object, int id) {
         TableInfoService tableInfo = new TableInfoService(object);
         String tableName = SCHEMA + "." + tableInfo.defineTableName();
@@ -147,9 +179,9 @@ public class OrmManager {
         String sql = "DELETE FROM " + tableName + " WHERE " + idColumnName + " = " + id + ";";
         try (Connection connection = ConnectionManager.getConnection(); Statement st = connection.createStatement()) {
             st.executeUpdate(sql);
-            System.out.println("Deleted from DB element: " + object.getClass().getName() + ", id: " + id);
+            LOGGER.info("Deleted from DB element: " + object.getClass().getName() + ", id: " + id);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 
@@ -171,7 +203,7 @@ public class OrmManager {
                         Method idGetter = new PropertyDescriptor(TableInfoService.getIdField(inputObject.getClass().getDeclaredFields()).getName(), inputObject.getClass()).getReadMethod();
                         int idValue = (Integer) idGetter.invoke(inputObject);
 
-                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + mappedIdColumnName + " = " + idValue;
+                        String innerSql = "SELECT * FROM " + innerTableName + " WHERE " + mappedIdColumnName + " = " + idValue + ";";
                         List<T> innerBeans;
                         try (ResultSet innerResultSet = st.executeQuery(innerSql)) {
                             ResultSetToObjectMapper<T> innerMapper = new ResultSetToObjectMapper<>();
@@ -195,6 +227,8 @@ public class OrmManager {
                             for (T innerBean : innerBeans) {
                                 add.invoke(collection, innerBean);
                             }
+                            Method collectionFieldSetter = new PropertyDescriptor(entry.getValue().getName(), inputObject.getClass()).getWriteMethod();
+                            collectionFieldSetter.invoke(inputObject, collection);
                         }
                     } else {
                         //ManyToOne case (inner entity):
@@ -223,36 +257,7 @@ public class OrmManager {
                 }
             }
         } catch (NoSuchFieldException | NoSuchMethodException | IntrospectionException | InvocationTargetException | IllegalAccessException | SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

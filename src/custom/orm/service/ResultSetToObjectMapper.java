@@ -1,10 +1,12 @@
-package custom.orm;
+package custom.orm.service;
 
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.JoinColumn;
 import custom.orm.annotations.ManyToOne;
 import custom.orm.annotations.OneToOne;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -19,18 +21,23 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Mapper class which builds a List of objects from ResultSet
+ * Mapper which builds a List of objects from ResultSet.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
  */
 public class ResultSetToObjectMapper<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResultSetToObjectMapper.class);
+
     /**
-     * @param rs   ResultSet to build an Object from
-     * @param type Class of the resulting Object
+     * Retrieves objects from given ResultSet and maps them to specified type.
+     *
+     * @param rs   ResultSet to build objects from
+     * @param type Class of the resulting objects
      * @return resulting List of objects
      */
-    public List<T> getObjects(ResultSet rs, Class type) {
+    public List<T> getObjects(ResultSet rs, Class<?> type) {
         List<T> results = new ArrayList<>();
         if (type.isAnnotationPresent(Entity.class)) {
             try {
@@ -75,7 +82,7 @@ public class ResultSetToObjectMapper<T> {
                     results.add(bean);
                 }
             } catch (SQLException | InstantiationException | IllegalAccessException | IntrospectionException | InvocationTargetException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage());
             }
         }
         return results;

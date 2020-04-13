@@ -1,6 +1,8 @@
-package custom.orm;
+package custom.orm.service;
 
 /**
+ * Enumeration of fetch strategy of inner objects from DB.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

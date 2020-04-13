@@ -1,6 +1,8 @@
-package custom.orm;
+package custom.orm.service;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -18,6 +20,9 @@ import java.util.ResourceBundle;
  * @since 1.0
  */
 public class ConnectionManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionManager.class);
+    private static final String DB_INIT_SCRIPT_PATH = "resources/custom/orm/orm_database.sql";
 
     private static Connection connection;
     private static String driverName;
@@ -37,32 +42,43 @@ public class ConnectionManager {
         mappingStrategy = resourceBundle.getString("defaultMappingStrategy");
     }
 
+    /**
+     * Obtains a connection
+     *
+     * @return obtained connection
+     */
     public static Connection getConnection() {
         try {
             Class.forName(driverName);
             connection = DriverManager.getConnection(url, username, password);
 
         } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return connection;
     }
 
+    /**
+     * Explicitly closes connection. Preferably use try-with-resources instead of this method
+     */
     public static void closeConnection() {
         try {
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 
+    /**
+     * Initializes database from resources
+     */
     public static void initDataBase() {
         try (Connection connection = getConnection()) {
             ScriptRunner runner = new ScriptRunner(connection);
-            Reader reader = new BufferedReader(new FileReader("resources/custom/orm/orm_database.sql"));
+            Reader reader = new BufferedReader(new FileReader(DB_INIT_SCRIPT_PATH));
             runner.runScript(reader);
         } catch (IOException | SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 }

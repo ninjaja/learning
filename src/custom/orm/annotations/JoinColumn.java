@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Specifies inner object mappings.
+ *
  * @author Dmitry Matrizaev
  * @since 1.0
  */

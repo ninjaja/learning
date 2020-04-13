@@ -1,4 +1,4 @@
-package custom.orm;
+package custom.orm.service;
 
 /**
  * Enumeration to select default mapping strategy (in lower- or uppercase) for fields without @Column annotation.

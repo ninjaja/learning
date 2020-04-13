@@ -4,13 +4,11 @@ import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
 import custom.orm.annotations.Id;
 import custom.orm.annotations.OneToMany;
-import custom.orm.annotations.Transient;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Entity representing an auction user who can buy and sell items backed with the self-titled table in DB.
+ * Entity representing an auction user who can buy and sell items and is stored within the self-titled table in DB.
  *
  * @author Dmitry Matrizaev
  * @since 1.0
