@@ -5,6 +5,7 @@ import custom.orm.annotations.Entity;
 import custom.orm.annotations.JoinColumn;
 import custom.orm.annotations.ManyToOne;
 import custom.orm.annotations.OneToOne;
+import custom.orm.exception.CustomOrmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +60,14 @@ public class ResultSetToObjectMapper<T> {
                     populateInnerBeans();
                 }
             } catch (SQLException | InstantiationException | IllegalAccessException | IntrospectionException | InvocationTargetException e) {
-                LOGGER.error(e.getMessage());
+                LOGGER.error(e.getMessage(), e);
             }
         }
         return results;
     }
 
-    private void populateInnerBeans() throws IllegalAccessException, InstantiationException, SQLException, IntrospectionException, InvocationTargetException {
+    private void populateInnerBeans() throws IllegalAccessException, InstantiationException, SQLException,
+            IntrospectionException, InvocationTargetException {
         bean = type.newInstance();
         for (int i = 0; i < metaData.getColumnCount(); i++) {
             columnName = metaData.getColumnName(i + 1);
@@ -90,18 +92,29 @@ public class ResultSetToObjectMapper<T> {
         results.add(bean);
     }
 
-    private void populateInnerInstance(Field field, Object value) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+    private void populateInnerInstance(Field field, Object value) throws IllegalAccessException,
+            InstantiationException, IntrospectionException, InvocationTargetException {
         Class<?> innerEntityType = field.getType();
         Object innerInstance = (innerEntityType).newInstance();
         if (field.isAnnotationPresent(JoinColumn.class) && columnName.equalsIgnoreCase(field.getAnnotation(JoinColumn.class).name())) {
             Method innerEntitySetter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
             // set empty inner instance:
             innerEntitySetter.invoke(bean, innerInstance);
-            Field innerEntityIdField = TableInfoService.getIdField(innerEntityType.getDeclaredFields());
-            Method innerEntityIdSetter = new PropertyDescriptor(innerEntityIdField.getName(),
-                    innerEntityType).getWriteMethod();
-            // set id to inner instance:
-            innerEntityIdSetter.invoke(innerInstance, value);
+            Field[] innerFields = innerEntityType.getDeclaredFields();
+            if (TableInfoService.hasIdField(innerFields)) {
+                Field innerEntityIdField = TableInfoService.getIdField(innerFields);
+                Method innerEntityIdSetter =
+                        new PropertyDescriptor(innerEntityIdField.getName(), innerEntityType).getWriteMethod();
+                // set id to inner instance:
+                innerEntityIdSetter.invoke(innerInstance, value);
+            } else if (TableInfoService.hasPkField(innerFields)) {
+                Field innerEntityPkField = TableInfoService.getPkField(innerFields);
+                Method innerEntityPkSetter =
+                        new PropertyDescriptor(innerEntityPkField.getName(), innerEntityType).getWriteMethod();
+                innerEntityPkSetter.invoke(innerInstance, value);
+            } else {
+                throw new CustomOrmException("No id or primary key field found in class: " + bean.getClass());
+            }
         }
     }
 }

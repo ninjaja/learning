@@ -22,7 +22,7 @@ public class Purchase {
     private int id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchaser_id")
+    @JoinColumn(name = "purchaser_login")
     private User purchaser;
 
     @OneToOne(fetch = FetchType.LAZY)

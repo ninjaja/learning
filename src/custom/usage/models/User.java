@@ -2,8 +2,8 @@ package custom.usage.models;
 
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Entity;
-import custom.orm.annotations.Id;
 import custom.orm.annotations.OneToMany;
+import custom.orm.annotations.PrimaryKey;
 
 import java.util.Set;
 
@@ -16,24 +16,21 @@ import java.util.Set;
 @Entity
 public class User {
 
-    @Id
-    @Column(name = "user_id")
-    private int id;
-
-    @Column(name = "full_name")
-    private String fullName;
-
+    @PrimaryKey
     private String login;
 
     private String password;
 
+    @Column(name = "full_name")
+    private String fullName;
+
     @OneToMany(mappedBy = "purchaser")
     Set<Purchase> purchases;
 
-    public User(String fullName, String login, String password) {
-        this.fullName = fullName;
+    public User(String login, String password, String fullName) {
         this.login = login;
         this.password = password;
+        this.fullName = fullName;
     }
 
     public User() {
@@ -47,22 +44,6 @@ public class User {
     public void removePurchase(Purchase purchase) {
         purchases.remove(purchase);
         purchase.setPurchaser(null);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public String getLogin() {
@@ -81,6 +62,14 @@ public class User {
         this.password = password;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     public Set<Purchase> getPurchases() {
         return purchases;
     }
@@ -90,25 +79,23 @@ public class User {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
 
-        User user = (User) o;
+        User user = (User) object;
 
-        if (id != user.id) return false;
-        return login != null ? login.equals(user.login) : user.login == null;
+        if (login != null ? !login.equals(user.login) : user.login != null) return false;
+        return fullName != null ? fullName.equals(user.fullName) : user.fullName == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id;
-        result = 31 * result + (login != null ? login.hashCode() : 0);
-        return result;
+        return login != null ? login.hashCode() : 0;
     }
 
     @Override
     public String toString() {
-        return "User{" + "id=" + id + ", fullName='" + fullName + '\'' + ", login='" + login + '\'' + ", password='" + password + '\'' + ", purchases=" + purchases + '}';
+        return "User{" + "login='" + login + '\'' + ", password='" + password + '\'' + ", fullName='" + fullName + '\'' + ", purchases=" + purchases + '}';
     }
 }

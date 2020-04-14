@@ -1,5 +1,6 @@
 package custom.orm.service;
 
+import custom.orm.annotations.PrimaryKey;
 import custom.orm.exception.CustomOrmException;
 import custom.orm.annotations.Column;
 import custom.orm.annotations.Id;
@@ -52,7 +53,7 @@ public class TableInfoService {
         return tableName;
     }
 
-    String getColumnsNamesWithoutIdString() {
+    String getColumnsNamesAsString() {
         List<String> columnsNames = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
@@ -70,7 +71,7 @@ public class TableInfoService {
         return columnsNames.toString().replace("[", "").replace("]", "");
     }
 
-    List<String> getColumnsNamesWithoutId() {
+    List<String> getColumnsNamesAsList() {
         List<String> columnsNames = new ArrayList<>();
         Field[] fields = getFields();
         for (Field field : fields) {
@@ -86,86 +87,72 @@ public class TableInfoService {
         return columnsNames;
     }
 
-    String getValuesWithoutIdString() {
+    String getValuesAsString() {
         List<String> values = new ArrayList<>();
         Field[] fields = getFields();
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(OneToMany.class)) {
-                continue;
-            }
-            if (field.isAnnotationPresent(JoinColumn.class)) {
-                Object innerInstance = null;
-                Method innerInstanceGetter;
-                Class<?> innerClass = field.getType();
-                try {
+        try {
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(OneToMany.class)) {
+                    continue;
+                }
+                if (field.isAnnotationPresent(JoinColumn.class)) {
+                    Object innerInstance = null;
+                    Method innerInstanceGetter;
+                    Class<?> innerClass = field.getType();
                     innerInstanceGetter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
                     innerInstance = innerInstanceGetter.invoke(entity);
-                } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-                    LOGGER.error(e.getMessage());
-                }
-                String innerEntityId = null;
-                Field[] innerClassFields = innerClass.getDeclaredFields();
-                for (Field innerField : innerClassFields) {
-                    if (innerField.isAnnotationPresent(Id.class)) {
-                        Method innerEntityIdGetter;
-                        try {
-                            innerEntityIdGetter = new PropertyDescriptor(innerField.getName(), innerClass).getReadMethod();
-                            innerEntityId = innerEntityIdGetter.invoke(innerInstance).toString();
-                            break;
-                        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-                            LOGGER.error(e.getMessage());
-                        }
+                    Field[] innerClassFields = innerClass.getDeclaredFields();
+                    if (TableInfoService.hasIdField(innerClassFields)) {
+                        Field idField = TableInfoService.getIdField(innerClassFields);
+                        Method innerEntityIdGetter = new PropertyDescriptor(idField.getName(), innerClass).getReadMethod();
+                        String innerEntityId = innerEntityIdGetter.invoke(innerInstance).toString();
+                        values.add("'" + innerEntityId + "'");
+                        continue;
+                    } else if (TableInfoService.hasPkField(innerClassFields)) {
+                        Field pkField = TableInfoService.getPkField(innerClassFields);
+                        Method innerEntityPkGetter = new PropertyDescriptor(pkField.getName(), innerClass).getReadMethod();
+                        String innerEntityPk = innerEntityPkGetter.invoke(innerInstance).toString();
+                        values.add("'" + innerEntityPk + "'");
+                        continue;
+                    } else {
+                        throw new CustomOrmException("No id or primary key field found in class: " + innerClass);
                     }
                 }
-                values.add("'" + innerEntityId + "'");
-                continue;
-            }
-            Method getter = null;
-            try {
-                getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
-            } catch (IntrospectionException e) {
-                LOGGER.error(e.getMessage());
-            }
-            if (Objects.nonNull(getter)) {
-                try {
+                Method getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
+                if (Objects.nonNull(getter)) {
                     values.add("'" + getter.invoke(entity).toString() + "'");
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    LOGGER.error(e.getMessage());
+                } else {
+                    throw new CustomOrmException("No getter() found for field: " + field.getName());
                 }
-            } else {
-                throw new CustomOrmException("No getter() found for field: " + field.getName());
             }
+        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+            LOGGER.error(e.getMessage(), e);
         }
         return values.toString().replace("[", "").replace("]", "");
     }
 
-    List<String> getValuesWithoutId() {
+    List<String> getValuesAsList() {
         List<String> values = new ArrayList<>();
         Field[] fields = getFields();
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(OneToMany.class)) {
-                continue;
-            }
-            Method getter = null;
-            try {
-                getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
-            } catch (IntrospectionException e) {
-                LOGGER.error(e.getMessage());
-            }
-            if (Objects.nonNull(getter)) {
-                try {
-                    values.add("'" + getter.invoke(entity).toString() + "'");
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    LOGGER.error(e.getMessage());
+        try {
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(OneToMany.class)) {
+                    continue;
                 }
-            } else {
-                throw new CustomOrmException("No getter() found for field: " + field.getName());
+                Method getter = new PropertyDescriptor(field.getName(), entity.getClass()).getReadMethod();
+                if (Objects.nonNull(getter)) {
+                    values.add("'" + getter.invoke(entity).toString() + "'");
+                } else {
+                    throw new CustomOrmException("No getter() found for field: " + field.getName());
+                }
             }
+        } catch (IllegalArgumentException | CustomOrmException | IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+            LOGGER.error(e.getMessage(), e);
         }
         return values;
     }
 
-    Field[] getFields() {
+    private Field[] getFields() {
         return entity.getClass().getDeclaredFields();
     }
 
@@ -210,6 +197,20 @@ public class TableInfoService {
         return idFieldName;
     }
 
+    String getPkColumnName() {
+        Field[] fields = getFields();
+        String pkFieldName = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                if (field.isAnnotationPresent(Column.class)) {
+                    return field.getAnnotation(Column.class).name();
+                }
+                pkFieldName = applyCase(field.getName());
+            }
+        }
+        return pkFieldName;
+    }
+
     static String getIdColumnName(Field[] fields) {
         String idFieldName = null;
         for (Field field : fields) {
@@ -223,10 +224,51 @@ public class TableInfoService {
         return idFieldName;
     }
 
+    static String getPkColumnName(Field[] fields) {
+        String idFieldName = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                if (field.isAnnotationPresent(Column.class)) {
+                    return field.getAnnotation(Column.class).name();
+                }
+                idFieldName = applyCase(field.getName());
+            }
+        }
+        return idFieldName;
+    }
+
+    static boolean hasIdField(Field[] fields) {
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Id.class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean hasPkField(Field[] fields) {
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static Field getIdField(Field[] fields) {
         Field idField = null;
         for (Field field : fields) {
             if (field.isAnnotationPresent(Id.class)) {
+                idField = field;
+            }
+        }
+        return idField;
+    }
+
+    static Field getPkField(Field[] fields) {
+        Field idField = null;
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
                 idField = field;
             }
         }

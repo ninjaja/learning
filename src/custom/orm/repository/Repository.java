@@ -10,13 +10,7 @@ import java.util.List;
  */
 public interface Repository<T> {
 
-    void create(Object object);
-
-    T getById(Class<T> clazz, int id);
+    void create(T t);
 
     List<T> getAll(Class<T> clazz);
-
-    void update(T t, int id);
-
-    void delete(T t, int id);
 }
