@@ -1,4 +1,4 @@
-package custom.orm.models;
+package custom.usage.models;
 
 import custom.orm.service.FetchType;
 import custom.orm.annotations.Column;

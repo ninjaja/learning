@@ -1,6 +1,6 @@
 package custom.orm.repository;
 
-import custom.orm.models.Item;
+import custom.usage.models.Item;
 
 /**
  * Repository implementation for Items.

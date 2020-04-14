@@ -1,8 +1,8 @@
-package custom.orm.main;
+package custom.usage;
 
-import custom.orm.models.Item;
-import custom.orm.models.Purchase;
-import custom.orm.models.User;
+import custom.usage.models.Item;
+import custom.usage.models.Purchase;
+import custom.usage.models.User;
 import custom.orm.repository.ItemRepository;
 import custom.orm.repository.PurchaseRepository;
 import custom.orm.repository.Repository;

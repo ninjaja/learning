@@ -1,6 +1,6 @@
 package custom.orm.repository;
 
-import custom.orm.models.User;
+import custom.usage.models.User;
 
 /**
  * Repository implementation for Users

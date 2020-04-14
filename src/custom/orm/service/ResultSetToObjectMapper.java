@@ -30,61 +30,78 @@ public class ResultSetToObjectMapper<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResultSetToObjectMapper.class);
 
+    private ResultSet rs;
+    private Class<T> type;
+
+    public ResultSetToObjectMapper(ResultSet rs, Class<T> type) {
+        this.rs = rs;
+        this.type = type;
+    }
+
+    private List<T> results;
+    private Field[] fields;
+    private ResultSetMetaData metaData;
+    private T bean;
+    private String columnName;
+
     /**
      * Retrieves objects from given ResultSet and maps them to specified type.
      *
-     * @param rs   ResultSet to build objects from
-     * @param type Class of the resulting objects
      * @return resulting List of objects
      */
-    public List<T> getObjects(ResultSet rs, Class<?> type) {
-        List<T> results = new ArrayList<>();
+    public List<T> getObjects() {
+        results = new ArrayList<>();
         if (type.isAnnotationPresent(Entity.class)) {
             try {
-                ResultSetMetaData metaData = rs.getMetaData();
-                Field[] fields = type.getDeclaredFields();
+                metaData = rs.getMetaData();
+                fields = type.getDeclaredFields();
                 while (rs.next()) {
-                    T bean = (T) type.newInstance();
-                    for (int i = 0; i < metaData.getColumnCount(); i++) {
-                        String columnName = metaData.getColumnName(i + 1);
-                        Object value = rs.getObject(i + 1);
-                        for (Field field : fields) {
-                            String mappedName = null;
-                            if (field.isAnnotationPresent(Column.class)) {
-                                mappedName = field.getAnnotation(Column.class).name();
-
-                                // populate inner entities with empty instances (null-values) and set them their id's
-                            } else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
-                                Class<?> innerEntityType = field.getType();
-                                Object innerInstance = (innerEntityType).newInstance();
-                                if (field.isAnnotationPresent(JoinColumn.class) && columnName.equalsIgnoreCase(field.getAnnotation(JoinColumn.class).name())) {
-                                    Method innerEntitySetter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
-                                    // set empty inner instance:
-                                    innerEntitySetter.invoke(bean, innerInstance);
-                                    Field innerEntityIdField = TableInfoService.getIdField(innerEntityType.getDeclaredFields());
-                                    Method innerEntityIdSetter = new PropertyDescriptor(innerEntityIdField.getName(), innerEntityType).getWriteMethod();
-                                    // set id to inner instance:
-                                    innerEntityIdSetter.invoke(innerInstance, value);
-                                }
-                            }
-                            else {
-                                mappedName = field.getName();
-                            }
-                            if (columnName.equalsIgnoreCase(mappedName) && Objects.nonNull(value)) {
-                                Method setter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
-                                if (Objects.nonNull(setter)) {
-                                    setter.invoke(bean, value);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    results.add(bean);
+                    populateInnerBeans();
                 }
             } catch (SQLException | InstantiationException | IllegalAccessException | IntrospectionException | InvocationTargetException e) {
                 LOGGER.error(e.getMessage());
             }
         }
         return results;
+    }
+
+    private void populateInnerBeans() throws IllegalAccessException, InstantiationException, SQLException, IntrospectionException, InvocationTargetException {
+        bean = type.newInstance();
+        for (int i = 0; i < metaData.getColumnCount(); i++) {
+            columnName = metaData.getColumnName(i + 1);
+            Object value = rs.getObject(i + 1);
+            for (Field field : fields) {
+                String mappedName = null;
+                if (field.isAnnotationPresent(Column.class)) {
+                    mappedName = field.getAnnotation(Column.class).name();
+                } else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
+                    populateInnerInstance(field, value);
+                } else {
+                    mappedName = field.getName();
+                }
+
+                if (columnName.equalsIgnoreCase(mappedName) && Objects.nonNull(value)) {
+                    Method setter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
+                    setter.invoke(bean, value);
+                    break;
+                }
+            }
+        }
+        results.add(bean);
+    }
+
+    private void populateInnerInstance(Field field, Object value) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+        Class<?> innerEntityType = field.getType();
+        Object innerInstance = (innerEntityType).newInstance();
+        if (field.isAnnotationPresent(JoinColumn.class) && columnName.equalsIgnoreCase(field.getAnnotation(JoinColumn.class).name())) {
+            Method innerEntitySetter = new PropertyDescriptor(field.getName(), type).getWriteMethod();
+            // set empty inner instance:
+            innerEntitySetter.invoke(bean, innerInstance);
+            Field innerEntityIdField = TableInfoService.getIdField(innerEntityType.getDeclaredFields());
+            Method innerEntityIdSetter = new PropertyDescriptor(innerEntityIdField.getName(),
+                    innerEntityType).getWriteMethod();
+            // set id to inner instance:
+            innerEntityIdSetter.invoke(innerInstance, value);
+        }
     }
 }

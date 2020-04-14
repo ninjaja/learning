@@ -1,6 +1,6 @@
 package custom.orm.repository;
 
-import custom.orm.models.Purchase;
+import custom.usage.models.Purchase;
 
 /**
  * Repository implementation for Purchases.
